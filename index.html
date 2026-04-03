@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOXX小遊戲</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>OOXX 井字遊戲</h1>
+    <h2 id="status">輪到玩家 O</h2>
+    
+    <div id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+
+    <button id="resetBtn">重新開始</button>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        const resetbtn = document.getElementById('resetBtn');
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+            [0, 4, 8], [2, 4, 6]             
+        ];
+
+        let current = ["","","","","","","","",""];
+        let current_palyer = "O";
+        let win = false;
+        
+        function main(){
+            cells.forEach(cell => cell.addEventListener('click',cellclick));
+            resetbtn.addEventListener('click',restartgame);
+            status.textContent = `輪到玩家${current_palyer}`;
+        }
+
+        function cellclick(e){
+            const cell = e.target;
+            const cell_index = cell.getAttribute('data-index');
+
+            if(current[cell_index] != "" || win){
+                return;
+            }
+
+            updata(cell,cell_index);
+            check_winner();
+        }
+
+        function updata(cell,index){
+            current[index] = current_palyer;
+            cell.textContent = current_palyer;
+            cell.style.color = current_palyer === "O" ? "blue" : "red";
+        }
+
+        function check_winner(){
+            for(let i = 0;i < winConditions.length;i ++){
+                const [a,b,c] = winConditions[i];
+                if(current[a] && current[a] === current[b] && current[b] === current[c]){
+                    win = true;
+                    break;
+                }
+            }
+            
+            if(win){
+                status.textContent = `玩家${current_palyer}獲勝!`;
+                return;
+            }
+
+            if(!current.includes("")){
+                status.textContent = "平手！";
+                win = true;
+                return;
+            }
+            current_palyer = current_palyer === "O" ? "X":"O";
+            status.textContent = `輪到玩家 ${current_palyer}`
+        }
+        function restartgame(){
+            current_palyer = "O";
+            current = ["","","","","","","","",""];
+            win = false;
+            status.textContent = `輪到玩家 ${current_palyer}`;
+            cells.forEach(cell => {
+                cell.textContent = "";
+            });
+        }
+        main();
+    </script>
+</body>
+</html>
