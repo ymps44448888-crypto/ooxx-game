@@ -4,14 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OOXX遊戲</title>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header-box {
+            background-color: #ffffff;
+            border: 2px solid #003a7c;
+            color: #003a7c;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .context-card {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+        h2 {
+            color: #2c3e50;
+            border-left: 5px solid #7688a7;
+            padding-left: 10px;
+            margin-top: 20px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            justify-content: center; 
+        }
+        #status {
+            text-align: center;
+            border-left: none;
+            margin-top: 0;
+        }
+        .cell{
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            border: 2px solid #333;
+            font-size: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .cell:hover {
+            background-color: #e0e0e0;
+        }
+        .footer-flex {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            color: #6d6969;
+            font-size: 0.85rem;
+            margin-top: 30px;
+        }
+        .footer-flex a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .submit-btn {
+            grid-column: 1 / 4;
+            justify-self: center;
+            padding: 10px 30px;
+            background-color: #cfd7de;
+            color: rgb(14, 27, 94);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #winO, #winX {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9); 
+            z-index: 1000; 
+            display: none; 
+            justify-content: center;
+            align-items: center;
+        }
+
+        
+        .slide-in {
+            display: flex !important; 
+            animation: slideRightToLeft 0.5s ease-out forwards; 
+        }
+
+        @keyframes slideRightToLeft {
+            0% {
+                transform: translateX(100%); 
+            }
+            100% {
+                transform: translateX(0); 
+            }
+        }
+
+    </style>
 </head>
 <body>
     <div class="header-box">
         <h1>OOXX小遊戲</h1>
     </div>
+    <div id="winO">
+        <img src="./O.png" alt="" style="height: auto;">
+    </div>
+    <div id="winX">
+        <img src="./X.png" alt="" style="height: auto;">
+    </div>
     <h2 id="status">現在輪到O</h2>
-    
-    <div class="context-card board">
+    <div class="context-card board" id="maina">
         <div class="cell" data-index="0"></div>
         <div class="cell" data-index="1"></div>
         <div class="cell" data-index="2"></div>
@@ -23,9 +148,103 @@
         <div class="cell" data-index="8"></div>
         <button id="restart" class="submit-btn">重新開始</button>
     </div>
-    <div class="footer-flex">
+    <div class="footer-flex" id="mainb">
         <a href="{{ url_for('student_main') }}"><-回首頁</a>
         <span>by.海山高中班聯會製作</span>
     </div>
+    
+
+    <script>
+        const cell = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        const restart = document.getElementById('restart');
+        const win_aeraO = document.getElementById('winO');
+        const win_aeraX = document.getElementById('winX');
+
+
+        win_aeraO.style.display = 'none';
+        win_aeraX.style.display = 'none';
+
+        let board = ["","","","","","","","",""];
+        let currentPlayer = "O";
+        let win = false;
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+            [0, 4, 8], [2, 4, 6]             
+        ];
+
+        function main(){
+            cell.forEach(cell => cell.addEventListener('click',cell_click));
+            restart.addEventListener('click',restart_game);
+            statusText.textContent = `輪到 ${currentPlayer}`;
+            win_aeraO.addEventListener('click',change);
+            win_aeraX.addEventListener('click',change);
+        }
+
+        function cell_click(e){
+            let c = e.target;
+            let cIndex = c.getAttribute('data-index');
+
+            if(board[cIndex] != "" || win){
+                return;
+            }
+
+            board[cIndex] = currentPlayer;
+            c.textContent = currentPlayer;
+            c.style.color = currentPlayer === "O" ? "blue":"red";
+            check_win();
+        }
+
+        function check_win(){
+            for(let i = 0;i < winConditions.length;i ++){
+                let [a,b,c] = winConditions[i];
+                if(board[a] && board[a] === board[b] && board[b] === board[c]){
+                    win = true;
+                    statusText.textContent = `玩家${currentPlayer}獲勝！`;
+                    alreadyWin(currentPlayer);
+                    setTimeout(restart_game, 1000);
+                    return;
+                }
+            }
+            if(!board.includes("")){
+                statusText.textContent = `平手~`;
+                win = true;
+                return;
+            }
+            if(!win){
+                currentPlayer = currentPlayer === "O" ? "X" : "O";
+                statusText.textContent = `輪到 ${currentPlayer}`;
+            }
+        }
+
+        function restart_game(){
+            currentPlayer = "O";
+            board = ["","","","","","","","",""];
+            win = false;
+            cell.forEach(cell => {
+                cell.textContent = "";
+            });
+            statusText.textContent = `輪到 ${currentPlayer}`;
+            win_aeraO.classList.remove('slide-in');
+            win_aeraX.classList.remove('slide-in');
+        }
+
+        function alreadyWin(c){
+            if(c === "O"){
+                win_aeraO.classList.add('slide-in');
+            }
+            else{
+                win_aeraX.classList.add('slide-in');
+            }
+        }
+
+        function change(){
+            restart_game();
+        }
+
+        main();
+    </script>
 </body>
 </html>
