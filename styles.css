@@ -104,12 +104,12 @@ body {
         
         .slide-in {
             display: flex !important; 
-            animation: slideRightToLeft 0.5s ease-out forwards; 
+            animation: slideRightToLeft 1s ease-out forwards; 
         }
 
         @keyframes slideRightToLeft {
             0% {
-                transform: translateX(100%); 
+                transform: translateX(45%); 
             }
             100% {
                 transform: translateX(0); 
