@@ -1,7 +1,12 @@
-
-        const cell = document.querySelectorAll('.cell');
+const cell = document.querySelectorAll('.cell');
         const statusText = document.getElementById('status');
         const restart = document.getElementById('restart');
+        const win_aeraO = document.getElementById('winO');
+        const win_aeraX = document.getElementById('winX');
+
+
+        win_aeraO.style.display = 'none';
+        win_aeraX.style.display = 'none';
 
         let board = ["","","","","","","","",""];
         let currentPlayer = "O";
@@ -17,6 +22,8 @@
             cell.forEach(cell => cell.addEventListener('click',cell_click));
             restart.addEventListener('click',restart_game);
             statusText.textContent = `輪到 ${currentPlayer}`;
+            win_aeraO.addEventListener('click',change);
+            win_aeraX.addEventListener('click',change);
         }
 
         function cell_click(e){
@@ -39,7 +46,8 @@
                 if(board[a] && board[a] === board[b] && board[b] === board[c]){
                     win = true;
                     statusText.textContent = `玩家${currentPlayer}獲勝！`;
-                    // need;
+                    alreadyWin(currentPlayer);
+                    setTimeout(restart_game, 1000);
                     return;
                 }
             }
@@ -62,6 +70,20 @@
                 cell.textContent = "";
             });
             statusText.textContent = `輪到 ${currentPlayer}`;
+            win_aeraO.classList.remove('slide-in');
+            win_aeraX.classList.remove('slide-in');
         }
 
+        function alreadyWin(c){
+            if(c === "O"){
+                win_aeraO.classList.add('slide-in');
+            }
+            else{
+                win_aeraX.classList.add('slide-in');
+            }
+        }
+
+        function change(){
+            restart_game();
+        }
         main();
